@@ -148,11 +148,18 @@ void isoc_transfer_callback(usb_transfer_t *transfer)
                     goto next_isoc_packet;
                 }
             } else {
-                // We received SoF but current_frame is not NULL: We missed EoF - reset the frame buffer
-                ESP_EARLY_LOGW(TAG, "missed EoF");
-                uvc_stream->single_thread.skip_current_frame = true;
-                uvc_frame_reset(uvc_stream->dynamic.current_frame);
+                // Missed EoF — deliver previous frame using SoF of next frame as signal
+                uvc_host_frame_t *prev_frame = uvc_stream->dynamic.current_frame;
+                uvc_stream->dynamic.current_frame = NULL;
                 UVC_EXIT_CRITICAL();
+                if (prev_frame->data_len > 0 && uvc_stream->constant.frame_cb) {
+                    bool return_frame = uvc_stream->constant.frame_cb(prev_frame, uvc_stream->constant.cb_arg);
+                    if (return_frame) {
+                        uvc_host_frame_return(uvc_stream, prev_frame);
+                    }
+                } else {
+                    uvc_host_frame_return(uvc_stream, prev_frame);
+                }
             }
         }
 
