@@ -101,7 +101,7 @@ void isoc_transfer_callback(usb_transfer_t *transfer)
             goto next_isoc_packet;
         }
 
-#ifdef CONFIG_UVC_CHECK_PAYLOAD_HEADER_ERR
+#if CONFIG_UVC_CHECK_PAYLOAD_HEADER_ERR
         // Check for error flag
         if (payload_header->bmHeaderInfo.error) {
             ESP_LOGW(TAG, "frame error");
@@ -113,7 +113,7 @@ void isoc_transfer_callback(usb_transfer_t *transfer)
         if (start_of_frame) {
             // We detected start of new frame. Update Frame ID and start fetching this frame
             uvc_stream->single_thread.current_frame_id   = payload_header->bmHeaderInfo.frame_id;
-#ifdef CONFIG_UVC_CHECK_PAYLOAD_HEADER_ERR
+#if CONFIG_UVC_CHECK_PAYLOAD_HEADER_ERR
             uvc_stream->single_thread.skip_current_frame = payload_header->bmHeaderInfo.error;
 #else
             uvc_stream->single_thread.skip_current_frame = false;
